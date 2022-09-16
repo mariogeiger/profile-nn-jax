@@ -6,11 +6,14 @@ from ._src import profile
 __version__ = "0.1.0"
 
 ENABLED = False
+TIMIMNG = False
 
 
-def enable(yes: bool = True):
+def enable(*, timing: bool = False):
     global ENABLED
-    ENABLED = yes
+    global TIMIMNG
+    ENABLED = True
+    TIMIMNG = timing
 
 
 def disable():
@@ -20,6 +23,10 @@ def disable():
 
 def is_enabled() -> bool:
     return ENABLED
+
+
+def is_timing() -> bool:
+    return TIMIMNG
 
 
 REF_TIME = None
