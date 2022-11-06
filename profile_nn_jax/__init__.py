@@ -1,19 +1,20 @@
 from time import perf_counter as _perf_counter
 from typing import Optional
 
-from ._src import profile
-
 __version__ = "0.1.0"
 
 ENABLED = False
 TIMIMNG = False
+STATISTICS = False
 
 
-def enable(*, timing: bool = False):
+def enable(*, timing: bool = False, statistics: bool = True):
     global ENABLED
     global TIMIMNG
+    global STATISTICS
     ENABLED = True
     TIMIMNG = timing
+    STATISTICS = statistics
 
 
 def disable():
@@ -27,6 +28,10 @@ def is_enabled() -> bool:
 
 def is_timing() -> bool:
     return TIMIMNG
+
+
+def is_statistics() -> bool:
+    return STATISTICS
 
 
 REF_TIME = None
@@ -58,4 +63,22 @@ def restart_timer() -> Optional[float]:
     return t
 
 
-__all__ = ["profile"]
+def profile(message: str, x):
+    """Add a profile message to the computation graph.
+
+    Args:
+        message (str): The message to print.
+        x (pytree): A variable to bind the message to.
+
+    Returns:
+        The same variable as `x`.
+
+    Example:
+        >>> import jax.numpy as jnp
+        >>> from profile_nn_jax import profile
+        >>> x = jnp.arange(10)
+        >>> x = profile("x", x)
+    """
+    from ._src import profile as _profile
+
+    return _profile(message, x)
