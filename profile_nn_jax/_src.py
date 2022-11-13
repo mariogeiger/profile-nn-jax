@@ -26,9 +26,9 @@ def print_and_return_zero(
     if hasnan:
         flags += ["NaN"]
 
-    i = 20 - len(message)
+    i = 35 - len(message)
     print(
-        f"{'-' * (i//2)} {message[:20]} {'-' * (i - i//2)}{t}",
+        f"{'-' * (i//2)} {message[:35]} {'-' * (i - i//2)}{t}",
         end="",
     )
     if mean is not None:

@@ -1,7 +1,7 @@
 from time import perf_counter as _perf_counter
 from typing import Optional
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 ENABLED = False
 TIMIMNG = False
