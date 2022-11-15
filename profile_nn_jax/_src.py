@@ -1,3 +1,4 @@
+import logging
 from functools import partial
 
 import jax
@@ -14,11 +15,13 @@ def print_and_return_zero(
         t = profile_nn_jax.restart_timer()
 
         if t is None:
-            t = " " + "*" * 7
+            t = " " + "*" * 9
+        elif t > 1.0:
+            t = f" {t: 5.1f}s   "
         elif t > 1e-3:
-            t = f" {t:06.3f}s"
+            t = f"  {1000 * t: 5.1f}ms "
         else:
-            t = f" {1000 * t:05.3f}ms"
+            t = f"   {1e6 * t: 5.1f}us"
     else:
         t = ""
 
@@ -26,17 +29,14 @@ def print_and_return_zero(
     if hasnan:
         flags += ["NaN"]
 
-    i = 20 - len(message)
-    print(
-        f"{'-' * (i//2)} {message[:20]} {'-' * (i - i//2)}{t}",
-        end="",
-    )
+    total_len = 35
+    i = total_len - len(message)
+
+    msg = f"{'-' * (i//2)} {message[:total_len]} {'-' * (i - i//2)}{t}"
     if mean is not None:
-        print(
-            f"{mean: 8.1e} ±{amplitude: 8.1e} [{minval: 6.0e},{maxval: 6.0e}] {','.join(flags)}",
-            end="",
-        )
-    print("", flush=True)
+        msg += f" {mean: 8.1e} ±{amplitude: 8.1e} [{minval: 7.1e},{maxval: 7.1e}] {','.join(flags)}"
+
+    logging.info(msg)
 
     return np.array(0, dtype=np.int32)
 
