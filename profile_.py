@@ -1,8 +1,10 @@
-import profile_nn_jax
+import time
+from functools import partial
+
 import jax
 import jax.numpy as jnp
-from functools import partial
-import time
+
+import profile_nn_jax
 
 
 @partial(jax.jit, static_argnums=(0, 1))

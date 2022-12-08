@@ -8,13 +8,16 @@ TIMIMNG = False
 STATISTICS = False
 
 
-def enable(*, timing: bool = False, statistics: bool = True):
+def enable(*, timing: bool = True, statistics: bool = True):
+    import logging
+
     global ENABLED
     global TIMIMNG
     global STATISTICS
     ENABLED = True
     TIMIMNG = timing
     STATISTICS = statistics
+    logging.getLogger().setLevel(logging.INFO)
 
 
 def disable():
