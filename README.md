@@ -1,5 +1,13 @@
 # Profile NN jax
 
+Install from github:
+
+```bash
+pip install git+https://github.com/mariogeiger/profile-nn-jax.git
+```
+
+## Usage
+
 ```python
 import profile_nn_jax
 import jax
