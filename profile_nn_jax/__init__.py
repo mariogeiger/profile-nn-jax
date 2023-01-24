@@ -4,19 +4,13 @@ from typing import Optional
 __version__ = "0.2.0"
 
 ENABLED = False
-TIMIMNG = False
-STATISTICS = False
 
 
-def enable(*, timing: bool = True, statistics: bool = True):
+def enable():
     import logging
 
     global ENABLED
-    global TIMIMNG
-    global STATISTICS
     ENABLED = True
-    TIMIMNG = timing
-    STATISTICS = statistics
     logging.getLogger().setLevel(logging.INFO)
 
 
@@ -27,14 +21,6 @@ def disable():
 
 def is_enabled() -> bool:
     return ENABLED
-
-
-def is_timing() -> bool:
-    return TIMIMNG
-
-
-def is_statistics() -> bool:
-    return STATISTICS
 
 
 REF_TIME = None

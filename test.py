@@ -20,7 +20,6 @@ def test():
     x = jnp.arange(10)
     f(x)
 
-    profile_nn_jax.enable(timing=True)
     f.clear_cache()
     profile_nn_jax.stop_timer()
     f(x)
