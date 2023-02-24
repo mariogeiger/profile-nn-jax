@@ -10,7 +10,6 @@ import profile_nn_jax
 
 def print_and_return_zero(
     message,
-    timeit,
     shapes,
     dtypes,
     mean=None,
@@ -20,19 +19,16 @@ def print_and_return_zero(
     hasnan=None,
 ):
     if profile_nn_jax.is_enabled():
-        if timeit:
-            t = profile_nn_jax.restart_timer()
+        t = profile_nn_jax.restart_timer()
 
-            if t is None:
-                t = " " + "*" * 9
-            elif t > 1.0:
-                t = f" {t: 5.1f}s   "
-            elif t > 1e-3:
-                t = f"  {1000 * t: 5.1f}ms "
-            else:
-                t = f"  {1e6 * t: 6.1f}us"
+        if t is None:
+            t = " " + "*" * 9
+        elif t > 1.0:
+            t = f" {t: 5.1f}s   "
+        elif t > 1e-3:
+            t = f"  {1000 * t: 5.1f}ms "
         else:
-            t = ""
+            t = f"  {1e6 * t: 6.1f}us"
 
         flags = []
         if hasnan:
@@ -94,12 +90,9 @@ def profile(message: str, x):
 
         dtypes = [e.dtype for e in leaves]
 
-        fn = partial(
-            jax.pure_callback,
-            callback=partial(print_and_return_zero, message, True, shapes, dtypes),
+        zero = jax.pure_callback(
+            callback=partial(print_and_return_zero, message, shapes, dtypes),
             result_shape_dtypes=jnp.array(0, dtype=jnp.int32),
-        )
-        zero = fn(
             mean=jnp.mean(jnp.array([e.mean() for e in leaves])),
             amplitude=jnp.mean(jnp.array([(e**2).mean() for e in leaves])) ** 0.5,
             minval=jnp.min(jnp.array([e.min() for e in leaves])),

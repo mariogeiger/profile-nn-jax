@@ -7,10 +7,10 @@ import jax.numpy as jnp
 import profile_nn_jax
 
 
-@partial(jax.jit, static_argnums=(0, 1))
-def f(enable_profiling: bool, enable_timing: bool, x):
+@partial(jax.jit, static_argnums=(0,))
+def f(enable_profiling: bool, x):
     if enable_profiling:
-        profile_nn_jax.enable(timing=enable_timing)
+        profile_nn_jax.enable()
     else:
         profile_nn_jax.disable()
 
@@ -27,15 +27,11 @@ def test():
     x = jnp.arange(10)
 
     t = time.perf_counter()
-    f(False, False, x)
+    f(False, x)
     print(f"Profiling disabled: took {time.perf_counter() - t:.3f}s")
 
     t = time.perf_counter()
-    f(True, False, x)
-    print(f"Profiling enabled: took {time.perf_counter() - t:.3f}s")
-
-    t = time.perf_counter()
-    f(True, True, x)
+    f(True, x)
     print(f"Profiling enabled: took {time.perf_counter() - t:.3f}s")
 
 
