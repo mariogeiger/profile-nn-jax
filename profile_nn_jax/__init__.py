@@ -7,11 +7,8 @@ ENABLED = False
 
 
 def enable():
-    import logging
-
     global ENABLED
     ENABLED = True
-    logging.getLogger().setLevel(logging.INFO)
 
 
 def disable():
