@@ -9,14 +9,7 @@ import profile_nn_jax
 
 
 def print_and_return_zero(
-    message,
-    shapes,
-    dtypes,
-    mean=None,
-    amplitude=None,
-    minval=None,
-    maxval=None,
-    hasnan=None,
+    message, shapes, dtypes, mean, amplitude, minval, maxval, hasnan, hasinf
 ):
     if profile_nn_jax.is_enabled():
         t = profile_nn_jax.restart_timer()
@@ -24,7 +17,7 @@ def print_and_return_zero(
         if t is None:
             t = " " + "*" * 9
         elif t > 1.0:
-            t = f" {t: 5.1f}s   "
+            t = f"  {t: 5.1f}s  "
         elif t > 1e-3:
             t = f"  {1000 * t: 5.1f}ms "
         else:
@@ -32,7 +25,9 @@ def print_and_return_zero(
 
         flags = []
         if hasnan:
-            flags += ["NaN"]
+            flags += ["NaN 🤬"]
+        if hasinf:
+            flags += ["Inf 🤯"]
         if any(d == np.float16 for d in dtypes):
             flags += ["f16"]
         if any(d == np.float32 for d in dtypes):
@@ -67,22 +62,28 @@ def print_and_return_zero(
         else:
             s = f"{shapes}"
 
-        total_len = 35
+        total_len = 40 + 10 - len(s)
         i = total_len - len(message)
 
-        msg = f"{'-' * (i//2)} {message[:total_len]} {'-' * (i - i//2)}{s}{t} "
-        if mean is not None:
-            msg += f" {mean: 8.1e} ±{amplitude: 8.1e} [{minval: 7.1e},{maxval: 7.1e}] {','.join(flags)}"
-
+        msg = (
+            f"{'-' * (i//2)} {message[:total_len]} {'-' * (i - i//2)}{s}{t} "
+            f"{mean: 8.1e} ±{amplitude: 8.1e} [{minval: 7.1e},{maxval: 7.1e}] {','.join(flags)}"
+        )
         logging.info(msg)
 
     return np.array(0, dtype=np.int32)
 
 
 @partial(jax.custom_jvp, nondiff_argnums=(0,))
-def profile(message: str, x):
+def profile(message: str, x, mask):
     if profile_nn_jax.is_enabled():
         leaves = jax.tree_util.tree_leaves(x)
+
+        if mask is None:
+            mask = [jnp.ones(e.shape, dtype=jnp.bool_) for e in leaves]
+
+        mask = [jnp.broadcast_to(m, e.shape) for e, m in zip(leaves, mask)]
+
         if hasattr(x, "shape"):
             shapes = [x.shape]
         else:
@@ -90,14 +91,48 @@ def profile(message: str, x):
 
         dtypes = [e.dtype for e in leaves]
 
+        mean = jnp.mean(
+            jnp.array(
+                [jnp.where(m, e, 0.0).sum() / m.sum() for e, m in zip(leaves, mask)]
+            )
+        )
+        amplitude = (
+            jnp.mean(
+                jnp.array(
+                    [
+                        jnp.where(m, e**2, 0.0).sum() / m.sum()
+                        for e, m in zip(leaves, mask)
+                    ]
+                )
+            )
+            ** 0.5
+        )
+        minval = jnp.min(
+            jnp.array([jnp.where(m, e, e.max()).min() for e, m in zip(leaves, mask)])
+        )
+        maxval = jnp.max(
+            jnp.array([jnp.where(m, e, e.min()).max() for e, m in zip(leaves, mask)])
+        )
+        hasnan = jnp.any(
+            jnp.array(
+                [jnp.isnan(jnp.where(m, e, 0.0)).any() for e, m in zip(leaves, mask)]
+            )
+        )
+        hasinf = jnp.any(
+            jnp.array(
+                [jnp.isinf(jnp.where(m, e, 0.0)).any() for e, m in zip(leaves, mask)]
+            )
+        )
+
         zero = jax.pure_callback(
             callback=partial(print_and_return_zero, message, shapes, dtypes),
             result_shape_dtypes=jnp.array(0, dtype=jnp.int32),
-            mean=jnp.mean(jnp.array([e.mean() for e in leaves])),
-            amplitude=jnp.mean(jnp.array([(e**2).mean() for e in leaves])) ** 0.5,
-            minval=jnp.min(jnp.array([e.min() for e in leaves])),
-            maxval=jnp.max(jnp.array([e.max() for e in leaves])),
-            hasnan=jnp.any(jnp.array([jnp.isnan(e).any() for e in leaves])),
+            mean=mean,
+            amplitude=amplitude,
+            minval=minval,
+            maxval=maxval,
+            hasnan=hasnan,
+            hasinf=hasinf,
         )
 
         return jax.tree_util.tree_map(lambda e: e + zero, x)
@@ -106,6 +141,6 @@ def profile(message: str, x):
 
 @profile.defjvp
 def profile_jvp(message, primals, tangents):
-    (x,) = primals
-    (dx,) = tangents
-    return profile(f"(jvp){message}", x), dx
+    (x, m) = primals
+    (dx, dm) = tangents
+    return profile(f"(jvp){message}", x, m), dx

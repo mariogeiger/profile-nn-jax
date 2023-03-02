@@ -1,5 +1,6 @@
 from time import perf_counter as _perf_counter
 from typing import Optional
+import jax.numpy as jnp
 
 __version__ = "0.2.1"
 
@@ -49,12 +50,13 @@ def restart_timer() -> Optional[float]:
     return t
 
 
-def profile(message: str, x):
+def profile(message: str, x: jnp.ndarray, mask: Optional[jnp.ndarray] = None):
     """Add a profile message to the computation graph.
 
     Args:
         message (str): The message to print.
         x (pytree): A variable to bind the message to.
+        mask (pytree): A mask to apply to the variable before computing the statistics.
 
     Returns:
         The same variable as `x`.
@@ -67,4 +69,4 @@ def profile(message: str, x):
     """
     from ._src import profile as _profile
 
-    return _profile(message, x)
+    return _profile(message, x, mask)
