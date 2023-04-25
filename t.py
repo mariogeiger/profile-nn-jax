@@ -1,9 +1,6 @@
-import logging
 import jax
 import jax.numpy as jnp
 import profile_nn_jax
-
-logging.getLogger().setLevel(logging.INFO)  # Important to see the messages!
 
 
 @jax.jit

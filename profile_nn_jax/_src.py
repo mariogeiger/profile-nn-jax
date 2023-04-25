@@ -1,4 +1,3 @@
-import logging
 from functools import partial
 
 import jax
@@ -69,7 +68,7 @@ def print_and_return_zero(
             f"{'-' * (i//2)} {message[:total_len]} {'-' * (i - i//2)}{s}{t} "
             f"{mean: 8.1e} ±{amplitude: 8.1e} [{minval: 7.1e},{maxval: 7.1e}] {','.join(flags)}"
         )
-        logging.info(msg)
+        print(msg)
 
     return np.array(0, dtype=np.int32)
 

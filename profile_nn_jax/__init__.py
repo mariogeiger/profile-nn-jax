@@ -8,6 +8,7 @@ ENABLED = False
 
 
 def enable():
+    """Enable profiling."""
     global ENABLED
     ENABLED = True
 
